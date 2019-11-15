@@ -1,6 +1,7 @@
 package com.thepatriczek.videochat
 
 import android.Manifest
+import android.annotation.TargetApi
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -10,15 +11,17 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.app.Activity
+import android.graphics.Bitmap
+import android.net.Uri
+import android.os.Environment
 import android.view.View
 import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.ToggleButton
+import androidx.annotation.RequiresApi
 
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import java.util.ArrayList
-import java.util.HashMap
 
 import com.vidyo.VidyoClient.Connector.ConnectorPkg
 import com.vidyo.VidyoClient.Connector.Connector
@@ -27,6 +30,9 @@ import com.vidyo.VidyoClient.Device.LocalCamera
 import com.vidyo.VidyoClient.Endpoint.LogRecord
 import com.vidyo.VidyoClient.NetworkInterface
 import com.vidyo.videochat.R
+import java.io.File
+import java.io.FileOutputStream
+import java.util.*
 
 class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Connector.IRegisterLogEventListener, Connector.IRegisterNetworkInterfaceEventListener, Connector.IRegisterLocalCameraEventListener, IVideoFrameListener {
 
@@ -67,7 +73,7 @@ class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Conne
         controlsLayout = findViewById(R.id.controlsLayout)
         toolbarLayout = findViewById(R.id.toolbarLayout)
         videoFrame = findViewById(R.id.videoFrame)
-        videoFrame!!.Register(this)
+        videoFrame!!.register(this)
         host = findViewById(R.id.hostTextBox)
         displayName = findViewById(R.id.displayNameTextBox)
         token = findViewById(R.id.tokenTextBox)
@@ -81,10 +87,6 @@ class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Conne
         toggleMicrophoneButton!!.setOnClickListener(this)
         toggleCameraButton = findViewById(R.id.camera_privacy)
         toggleCameraButton!!.setOnClickListener(this)
-        var button = findViewById<ToggleButton>(R.id.camera_switch)
-        button.setOnClickListener(this)
-        button = findViewById(R.id.toggle_debug)
-        button.setOnClickListener(this)
 
         ConnectorPkg.setApplicationUIContext(this)
 
@@ -112,6 +114,7 @@ class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Conne
                     this.startVideoViewSizeListener()
                 }
             } catch (e: Exception) {
+                e.printStackTrace()
             }
 
         }
@@ -177,14 +180,6 @@ class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Conne
             this.applySettings()
         }
         refreshSettings = false
-    }
-
-    override fun onResume() {
-        super.onResume()
-    }
-
-    override fun onPause() {
-        super.onPause()
     }
 
     override fun onStop() {
@@ -343,9 +338,11 @@ class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Conne
         }
     }
 
-    override fun onClick(v: View) {
+    @TargetApi(Build.VERSION_CODES.O)
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onClick(view: View) {
         if (connector != null) {
-            when (v.id) {
+            when (view.id) {
                 R.id.connect ->
                     this.toggleConnect()
 
@@ -362,17 +359,9 @@ class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Conne
                     connector!!.setMicrophonePrivacy(microphonePrivacy)
                 }
 
-                R.id.toggle_debug -> {
-                    enableDebug = !enableDebug
-                    if (enableDebug) {
-                        connector!!.enableDebug(7776, "warning info@VidyoClient info@VidyoConnector")
-                    } else {
-                        connector!!.disableDebug()
-                    }
-                }
+                R.id.screenshot ->
+                    takeScreenshot()
 
-                else -> {
-                }
             }
         }
     }
@@ -466,5 +455,38 @@ class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Conne
         }
 
         private val permissions = arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_PHONE_STATE)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun takeScreenshot() {
+        try {
+            val path: String = Environment.getExternalStorageDirectory().toString() + "/" + Date().toInstant().toString() + ".jpg"
+
+            val view = window.decorView.rootView
+            view.isDrawingCacheEnabled = true
+            val bitmap = Bitmap.createBitmap(view.drawingCache)
+            view.isDrawingCacheEnabled = false
+
+            val imageFile = File(path)
+
+            val outputStream = FileOutputStream(imageFile)
+            val quality = 100
+            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
+            outputStream.flush()
+            outputStream.close()
+
+//            openScreenshot(imageFile)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun openScreenshot(imageFile: File) {
+        val intent = Intent()
+        intent.action = Intent.ACTION_VIEW
+
+        val uri = Uri.fromFile(imageFile)
+        intent.setDataAndType(uri, "image/*")
+        startActivity(intent)
     }
 }

@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.MotionEvent
 import android.widget.FrameLayout
 import android.util.AttributeSet
+import kotlin.math.abs
 
 class VideoFrameLayout(context: Context, attrs: AttributeSet?) : FrameLayout(context, attrs) {
 
@@ -13,26 +14,27 @@ class VideoFrameLayout(context: Context, attrs: AttributeSet?) : FrameLayout(con
     private val SCROLL_THRESHOLD = 10f
     private var isOnClick: Boolean = false
 
-    fun Register(listener: IVideoFrameListener) {
+    fun register(listener: IVideoFrameListener) {
         this.listener = listener
     }
 
-    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        when (ev.action and MotionEvent.ACTION_MASK) {
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        when (event.action and MotionEvent.ACTION_MASK) {
             MotionEvent.ACTION_DOWN -> {
-                downX = ev.x
-                downY = ev.y
+                downX = event.x
+                downY = event.y
                 isOnClick = true
             }
+
             MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_UP -> if (isOnClick) {
                 listener!!.onVideoFrameClicked()
             }
-            MotionEvent.ACTION_MOVE -> if (isOnClick && (Math.abs(downX - ev.x) > SCROLL_THRESHOLD || Math.abs(downY - ev.y) > SCROLL_THRESHOLD)) {
+
+            MotionEvent.ACTION_MOVE -> if (isOnClick && (abs(downX - event.x) > SCROLL_THRESHOLD || abs(downY - event.y) > SCROLL_THRESHOLD)) {
                 isOnClick = false
             }
-            else -> {
-            }
         }
-        return super.dispatchTouchEvent(ev)
+
+        return super.dispatchTouchEvent(event)
     }
 }
