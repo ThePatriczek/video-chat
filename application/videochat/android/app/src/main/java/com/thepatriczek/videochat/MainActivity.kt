@@ -1,6 +1,7 @@
 package com.thepatriczek.videochat
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -11,9 +12,14 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.app.Activity
+import android.content.Context
 import android.graphics.Bitmap
+import android.location.Geocoder
+import android.location.Location
+import android.location.LocationManager
 import android.net.Uri
 import android.os.Environment
+import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.widget.LinearLayout
@@ -21,6 +27,7 @@ import android.widget.ToggleButton
 import androidx.annotation.RequiresApi
 
 import androidx.core.app.ActivityCompat
+import androidx.core.app.ActivityCompat.checkSelfPermission
 import androidx.core.content.ContextCompat
 
 import com.vidyo.VidyoClient.Connector.ConnectorPkg
@@ -64,6 +71,12 @@ class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Conne
     private var refreshSettings = true
     private var devicesSelected = true
     private var onGlobalLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
+    private var latitude: Double = 0.0
+    private var longitude: Double = 0.0
+    private var gpsLocation: Location? = null
+    private var networkLocation: Location? = null
+    private var finalLocation: Location? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -254,6 +267,36 @@ class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Conne
                     onGlobalLayoutListener = this
                 }
             })
+        }
+
+        getLocation()
+    }
+
+    private fun getLocation() {
+        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        try {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                gpsLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                networkLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+
+                if (gpsLocation != null) {
+                    finalLocation = gpsLocation
+                } else if (networkLocation != null) {
+                    finalLocation = networkLocation
+                }
+
+                latitude = finalLocation?.latitude!!
+                longitude = finalLocation?.longitude!!
+
+                val geocoder = Geocoder(applicationContext, Locale.getDefault())
+                val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+                if (addresses != null && addresses.size > 0) {
+                    Log.wtf("address", addresses[0].locality)
+                }
+            }
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
         }
     }
 
@@ -454,7 +497,7 @@ class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Conne
             }
         }
 
-        private val permissions = arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_PHONE_STATE)
+        private val permissions = arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_PHONE_STATE, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
