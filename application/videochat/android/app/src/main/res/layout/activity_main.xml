@@ -309,27 +309,39 @@
                 android:layout_width="match_parent"
                 android:gravity="center"
                 android:id="@+id/toolbarStatusLayout">
+
                 <TextView
-                    android:id="@+id/toolbarStatusFiller"
-                    android:layout_height="match_parent"
+                    android:id="@+id/StatusText"
                     android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:gravity="center_horizontal|bottom"/>
-                <TextView
-                    android:id="@+id/toolbarStatusText"
                     android:layout_height="match_parent"
-                    android:layout_width="0dp"
                     android:layout_weight="4"
-                    android:maxLines="1"
                     android:gravity="center_horizontal|bottom"
-                    android:paddingStart="2dp"
+                    android:maxLines="1"
                     android:paddingEnd="2dp"
-                    android:textColor="#f1f1f1"
+                    android:paddingStart="2dp"
                     android:shadowColor="#0d0d0d"
-                    android:shadowRadius="2.0"
                     android:shadowDx="-3.0"
                     android:shadowDy="-3.0"
-                    android:text="Ready to Connect"/>
+                    android:shadowRadius="2.0"
+                    android:text="Ready to Connect"
+                    android:textColor="#f1f1f1" />
+
+
+                <TextView
+                    android:id="@+id/LocationText"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="4"
+                    android:gravity="center_horizontal|bottom"
+                    android:maxLines="1"
+                    android:paddingEnd="2dp"
+                    android:paddingStart="2dp"
+                    android:shadowColor="#0d0d0d"
+                    android:shadowDx="-3.0"
+                    android:shadowDy="-3.0"
+                    android:shadowRadius="2.0"
+                    android:text="Loading..."
+                    android:textColor="#f1f1f1" />
 
             </LinearLayout>
 

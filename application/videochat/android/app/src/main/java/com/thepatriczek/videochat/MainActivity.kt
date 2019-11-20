@@ -58,7 +58,8 @@ class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Conne
     private var displayName: EditText? = null
     private var token: EditText? = null
     private var resource: EditText? = null
-    private var toolbarStatus: TextView? = null
+    private var statusText: TextView? = null
+    private var locationText: TextView? = null
     private var videoFrame: VideoFrameLayout? = null
     private var hideConfig = false
     private var autoJoin = false
@@ -91,7 +92,8 @@ class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Conne
         displayName = findViewById(R.id.displayNameTextBox)
         token = findViewById(R.id.tokenTextBox)
         resource = findViewById(R.id.resourceIdTextBox)
-        toolbarStatus = findViewById(R.id.toolbarStatusText)
+        statusText = findViewById(R.id.StatusText)
+        locationText = findViewById(R.id.LocationText)
         connectionSpinner = findViewById(R.id.connectionSpinner)
 
         toggleConnectButton = findViewById(R.id.connect)
@@ -273,14 +275,18 @@ class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Conne
             })
         }
 
-        getLocation()
+        val location = getLocation()
+
+        if (location != null) {
+            locationText!!.text = location
+        }
     }
 
-    private fun getLocation() {
+    private fun getLocation(): String? {
         val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         try {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                    && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                    && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 gpsLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
                 networkLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
 
@@ -290,18 +296,23 @@ class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Conne
                     finalLocation = networkLocation
                 }
 
-                latitude = finalLocation?.latitude!!
-                longitude = finalLocation?.longitude!!
+                if (finalLocation != null) {
+                    latitude = finalLocation?.latitude!!
+                    longitude = finalLocation?.longitude!!
 
-                val geocoder = Geocoder(applicationContext, Locale.getDefault())
-                val addresses = geocoder.getFromLocation(latitude, longitude, 1)
-                if (addresses != null && addresses.size > 0) {
-                    Log.wtf("address", addresses[0].locality)
+                    val geocoder = Geocoder(applicationContext, Locale.getDefault())
+                    val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+
+                    if (addresses != null && addresses.size > 0) {
+                        return "${addresses[0].locality}, ${addresses[0].countryCode}"
+                    }
                 }
             }
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
         }
+
+        return null
     }
 
     private fun applySettings() {
@@ -339,7 +350,7 @@ class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Conne
         connectorState = state
 
         runOnUiThread {
-            toolbarStatus!!.text = stateDescription[connectorState]
+            statusText!!.text = stateDescription[connectorState]
 
             when (connectorState) {
                 State.Connecting -> {
@@ -371,7 +382,7 @@ class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Conne
 
                     if (!allowReconnect && connectorState == State.Disconnected) {
                         toggleConnectButton!!.isEnabled = false
-                        toolbarStatus!!.text = "Call ended"
+                        statusText!!.text = "Call ended"
                     }
 
                     if (!hideConfig) {
@@ -389,15 +400,13 @@ class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Conne
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onClick(view: View) {
         if (connector != null) {
-            Log.wtf("clicked",view.id.toString())
+            Log.wtf("clicked", view.id.toString())
             when (view.id) {
                 R.id.connect ->
                     this.toggleConnect()
 
-                R.id.camera_switch -> {
-                    Log.wtf("camera switch","clicked")
+                R.id.camera_switch ->
                     connector!!.cycleCamera()
-                }
 
                 R.id.camera_privacy -> {
                     cameraPrivacy = toggleCameraPrivacyButton!!.isChecked
