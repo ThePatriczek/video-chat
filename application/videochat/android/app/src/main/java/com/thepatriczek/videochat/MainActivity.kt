@@ -1,7 +1,6 @@
 package com.thepatriczek.videochat
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -27,7 +26,6 @@ import android.widget.ToggleButton
 import androidx.annotation.RequiresApi
 
 import androidx.core.app.ActivityCompat
-import androidx.core.app.ActivityCompat.checkSelfPermission
 import androidx.core.content.ContextCompat
 
 import com.vidyo.VidyoClient.Connector.ConnectorPkg
@@ -50,7 +48,9 @@ class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Conne
     private var localCamera: LocalCamera? = null
     private var toggleConnectButton: ToggleButton? = null
     private var toggleMicrophoneButton: ToggleButton? = null
-    private var toggleCameraButton: ToggleButton? = null
+    private var toggleCameraPrivacyButton: ToggleButton? = null
+    private var toggleCameraSwitchButton: ToggleButton? = null
+    private var toggleScreenshotButton: ToggleButton? = null
     private var connectionSpinner: ProgressBar? = null
     private var controlsLayout: LinearLayout? = null
     private var toolbarLayout: LinearLayout? = null
@@ -98,8 +98,12 @@ class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Conne
         toggleConnectButton!!.setOnClickListener(this)
         toggleMicrophoneButton = findViewById(R.id.microphone_privacy)
         toggleMicrophoneButton!!.setOnClickListener(this)
-        toggleCameraButton = findViewById(R.id.camera_privacy)
-        toggleCameraButton!!.setOnClickListener(this)
+        toggleCameraPrivacyButton = findViewById(R.id.camera_privacy)
+        toggleCameraPrivacyButton!!.setOnClickListener(this)
+        toggleCameraSwitchButton = findViewById(R.id.camera_switch)
+        toggleCameraSwitchButton!!.setOnClickListener(this)
+        toggleScreenshotButton = findViewById(R.id.screenshot)
+        toggleScreenshotButton!!.setOnClickListener(this)
 
         ConnectorPkg.setApplicationUIContext(this)
 
@@ -308,10 +312,10 @@ class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Conne
                 connector!!.disableDebug()
             }
 
-            toggleCameraButton!!.isChecked = false
+            toggleCameraPrivacyButton!!.isChecked = false
 
             if (cameraPrivacy) {
-                toggleCameraButton!!.performClick()
+                toggleCameraPrivacyButton!!.performClick()
             }
 
             toggleMicrophoneButton!!.isChecked = false
@@ -385,15 +389,18 @@ class MainActivity : Activity(), View.OnClickListener, Connector.IConnect, Conne
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onClick(view: View) {
         if (connector != null) {
+            Log.wtf("clicked",view.id.toString())
             when (view.id) {
                 R.id.connect ->
                     this.toggleConnect()
 
-                R.id.camera_switch ->
+                R.id.camera_switch -> {
+                    Log.wtf("camera switch","clicked")
                     connector!!.cycleCamera()
+                }
 
                 R.id.camera_privacy -> {
-                    cameraPrivacy = toggleCameraButton!!.isChecked
+                    cameraPrivacy = toggleCameraPrivacyButton!!.isChecked
                     connector!!.setCameraPrivacy(cameraPrivacy)
                 }
 
