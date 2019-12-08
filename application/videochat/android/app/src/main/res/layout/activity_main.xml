@@ -212,19 +212,6 @@
                             android:layout_height="25dp"
                             android:layout_centerHorizontal="true"
                             android:visibility="invisible" />
-
-                        <TextView
-                            android:id="@+id/clientVersion"
-                            android:layout_height="25dp"
-                            android:layout_width="wrap_content"
-                            android:maxLines="1"
-                            android:gravity="center"
-                            android:paddingStart="2dp"
-                            android:paddingEnd="2dp"
-                            android:textColor="#ff0000"
-                            android:textSize="10sp"
-                            android:visibility="invisible"
-                            android:text="VidyoClient-AndroidSDK 0.0.0.0"/>
                     </RelativeLayout>
 
                 </LinearLayout>
